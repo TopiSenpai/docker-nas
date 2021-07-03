@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+    plex:
+        image: linuxserver/plex
+        restart: unless-stopped
+        environment:
+            - VERSION=docker
+            - TZ=Europe/Berlin
+        ports:
+            - 32400:32400
+        networks:
+            - traefik
+        volumes:
+            - ./data/plex:/config/Library/Application Support/Plex Media Server
+            - /media/a/media/anime:/data/anime
+            - /media/a/media/tv:/data/tv
+            - /media/a/media/movies:/data/movies
+            - /media/a/media/music:/data/music
+        labels:
+            traefik.enable: true
+            traefik.http.routers.plex.rule: Host(`plex.nas`)
+            traefik.http.services.plex.loadbalancer.server.port: 32400
+            traefik.http.routers.plex.entrypoints: https
+
+    tautulli:
+        image: tautulli/tautulli
+        restart: unless-stopped
+        environment:
+            - TZ=Europe/Berlin
+        ports:
+            - 8181:8181
+        networks:
+            - traefik
+        volumes:
+            - ./data/tautulli:/config
+        labels:
+            traefik.enable: true
+            traefik.http.routers.tautulli.rule: Host(`tautulli.nas`)
+            traefik.http.services.tautulli.loadbalancer.server.port: 8181
+            traefik.http.routers.tautulli.entrypoints: https
+
+networks:
+    traefik:
+        external: true
