@@ -1,9 +1,9 @@
 global:
     checkNewVersion: true
-    sendAnonymousUsage: true
+    sendAnonymousUsage: false
 
 log:
-    level: INFO
+    level: DEBUG
 
 metrics:
     prometheus:
@@ -27,16 +27,19 @@ entryPoints:
         address: ':443'
         http:
             tls:
-                certResolver: default
+                certResolver:
                 domains:
-                    - main: 'kittybot.de'
+                    - main: topi.wtf
                       sans:
-                          - '*.kittybot.de'
-                          - 'hastebin.de'
-                          - '*.hastebin.de'
-            middlewares:
-                - global-errors@docker
-                - global-compress@docker
+                          - 'traefik.topi.wtf'
+                          - 'pihole.topi.wtf'
+                          - 'tautulli.topi.wtf'
+                          - 'plex.topi.wtf'
+                          - 'sonarr.topi.wtf'
+                          - 'radarr.topi.wtf'
+                          - 'jackett.topi.wtf'
+                          - 'deluge.topi.wtf'
+                          - 'www.topi.wtf'
 
 providers:
     docker:
@@ -47,3 +50,12 @@ providers:
 
 api:
     dashboard: true
+
+certificatesResolvers:
+    tls:
+        acme:
+            # testing server
+            # caserver: https://acme-staging-v02.api.letsencrypt.org/directory
+            email: tobi@strasserhof.com
+            storage: /letsencrypt/acme.json
+            tlsChallenge: true

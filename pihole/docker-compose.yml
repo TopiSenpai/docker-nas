@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+    pihole:
+        image: pihole/pihole:latest
+        container_name: pihole
+        restart: unless-stopped
+        ports:
+            - 53:53/tcp
+            - 53:53/udp
+            - 67:67/udp
+            - 8070:80
+        env_file:
+            - conf.env
+        volumes:
+            - ./.data/pihole/:/etc/pihole/
+            - ./.data/etc-dnsmasq.d/:/etc/dnsmasq.d/
+        cap_add:
+            - NET_ADMIN

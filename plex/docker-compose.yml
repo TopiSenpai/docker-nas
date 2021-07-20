@@ -3,28 +3,33 @@ version: '3.7'
 services:
     plex:
         image: linuxserver/plex
+        container_name: plex
         restart: unless-stopped
         environment:
             - VERSION=docker
             - TZ=Europe/Berlin
+            - PUID=1026
+            - PGID=100
+        env_file:
+            plex.env
         ports:
             - 32400:32400
         networks:
             - traefik
         volumes:
-            - ./data/plex:/config/Library/Application Support/Plex Media Server
-            - /media/a/media/anime:/data/anime
-            - /media/a/media/tv:/data/tv
-            - /media/a/media/movies:/data/movies
-            - /media/a/media/music:/data/music
+            - ./.data/plex/:/config/Library/Application Support/Plex Media Server/
+            - /volume1/plex/media/anime/:/mdeia/anime/
+            - /volume1/plex/media/tv/:/mdeia/tv/
+            - /volume1/plex/media/movies/:/media/movies/
         labels:
             traefik.enable: true
-            traefik.http.routers.plex.rule: Host(`plex.nas`)
+            traefik.http.routers.plex.rule: Host(`plex.topi.wtf`)
             traefik.http.services.plex.loadbalancer.server.port: 32400
-            traefik.http.routers.plex.entrypoints: https
+            traefik.http.routers.plex.entrypoints: http, https
 
     tautulli:
         image: tautulli/tautulli
+        container_name: tautulli
         restart: unless-stopped
         environment:
             - TZ=Europe/Berlin
@@ -33,12 +38,110 @@ services:
         networks:
             - traefik
         volumes:
-            - ./data/tautulli:/config
+            - ./.data/tautulli/:/config/
         labels:
             traefik.enable: true
-            traefik.http.routers.tautulli.rule: Host(`tautulli.nas`)
+            traefik.http.routers.tautulli.rule: Host(`tautulli.topi.wtf`)
             traefik.http.services.tautulli.loadbalancer.server.port: 8181
             traefik.http.routers.tautulli.entrypoints: https
+
+    sonarr:
+        image: ghcr.io/linuxserver/sonarr
+        container_name: sonarr
+        restart: unless-stopped
+        environment:
+            - UMASK=002
+            - TZ=Europe/Berlin
+            - DOCKER_MODS=gilbn/theme.park:sonarr
+            - PUID=1026
+            - PGID=100
+        networks:
+            - traefik
+        ports:
+            - 8989:8989
+        volumes:
+            - ./.data/sonarr/:/config/
+            - /volume1/plex/media/anime/:/media/anime/
+            - /volume1/plex/media/tv/:/media/tv/
+            - /volume1/plex/media/.import/:/media/.import/
+            - /volume1/plex/downloads/deluge/:/downloads/deluge/
+        labels:
+            traefik.enable: true
+            traefik.http.routers.sonarr.rule: Host(`sonarr.topi.wtf`)
+            traefik.http.routers.sonarr.entrypoints: https
+            traefik.http.services.sonarr.loadbalancer.server.port: 8989
+
+    radarr:
+        image: ghcr.io/linuxserver/radarr
+        container_name: radarr
+        restart: unless-stopped
+        environment:
+            - UMASK=002
+            - TZ=Europe/Berlin
+            - DOCKER_MODS=gilbn/theme.park:radarr
+            - PUID=1026
+            - PGID=100
+        networks:
+            - traefik
+        ports:
+            - 7878:7878
+        volumes:
+            - ./.data/radarr/:/config/
+            - /volume1/plex/media/movies/:/media/movies/
+            - /volume1/plex/media/.import/:/media/.import/
+            - /volume1/plex/downloads/deluge/:/downloads/deluge/:ro
+        labels:
+            traefik.enable: true
+            traefik.http.routers.radarr.rule: Host(`radarr.topi.wtf`)
+            traefik.http.routers.radarr.entrypoints: https
+            traefik.http.services.radarr.loadbalancer.server.port: 7878
+
+    deluge:
+        image: binhex/arch-delugevpn
+        container_name: deluge
+        restart: unless-stopped
+        cap_add:
+            - NET_ADMIN
+        env_file:
+            - ./deluge.env
+        environment:
+            - PUID=1026
+            - PGID=100
+        networks:
+            - traefik
+        ports:
+            - 8112:8112
+        volumes:
+            - ./.data/deluge/:/config/
+            - /volume1/plex/downloads/blackhole/:/blackhole/
+            - /volume1/plex/downloads/deluge/:/downloads/deluge/
+        labels:
+            traefik.enable: true
+            traefik.http.routers.deluge.rule: Host(`deluge.topi.wtf`)
+            traefik.http.routers.deluge.entrypoints: https
+            traefik.http.services.deluge.loadbalancer.server.port: 8112
+
+    jackett:
+        image: ghcr.io/linuxserver/jackett
+        container_name: jackett
+        restart: unless-stopped
+        environment:
+            - TZ=Europe/Berlin
+            - AUTO_UPDATE=false
+            - PUID=1026
+            - PGID=100
+        networks:
+            - traefik
+        ports:
+            - 9117:9117
+        volumes:
+            - ./.data/jackett/:/config/
+            - /volume1/plex/downloads/blackhole/:/blackhole/
+        labels:
+            traefik.enable: true
+            traefik.http.routers.jackett.rule: Host(`jackett.topi.wtf`)
+            traefik.http.routers.jackett.entrypoints: https
+            traefik.http.services.jackett.loadbalancer.server.port: 9117
 
 networks:
     traefik:
