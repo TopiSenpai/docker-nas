@@ -18,14 +18,14 @@ services:
             - traefik
         volumes:
             - ./.data/plex/:/config/Library/Application Support/Plex Media Server/
-            - /volume1/plex/media/anime/:/mdeia/anime/
-            - /volume1/plex/media/tv/:/mdeia/tv/
+            - /volume1/plex/media/anime/:/media/anime/
+            - /volume1/plex/media/tv/:/media/tv/
             - /volume1/plex/media/movies/:/media/movies/
         labels:
             traefik.enable: true
             traefik.http.routers.plex.rule: Host(`plex.topi.wtf`)
             traefik.http.services.plex.loadbalancer.server.port: 32400
-            traefik.http.routers.plex.entrypoints: http, https
+            traefik.http.routers.plex.entrypoints: https
 
     tautulli:
         image: tautulli/tautulli
